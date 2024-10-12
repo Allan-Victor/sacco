@@ -9,7 +9,10 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
+@Builder
 public class Qualification {
+    private Integer qualification_id;
+    private Integer staffId;
     private String name;
     private String institution;
     private LocalDate dateAchieved;
