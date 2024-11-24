@@ -1,4 +1,4 @@
-package org.sacco.hr.models;
+package org.sacco.hr.model;
 
 import lombok.Builder;
 import lombok.Data;
