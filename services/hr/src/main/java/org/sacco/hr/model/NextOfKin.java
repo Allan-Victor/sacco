@@ -1,8 +1,10 @@
-package org.sacco.hr.models;
+package org.sacco.hr.model;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data
+@AllArgsConstructor
 public class NextOfKin {
     private Integer nextOfKinId;
     private String fullName;
