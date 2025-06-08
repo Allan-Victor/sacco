@@ -7,4 +7,10 @@ spring:
   config:
     import: optional:configserver:http://localhost:8888
 
+  datasource:
+    url: jdbc:postgresql://localhost:5332/hr
+    username: sacco
+    password: sacco
+    driver-class-name: org.postgresql.Driver
+
 
