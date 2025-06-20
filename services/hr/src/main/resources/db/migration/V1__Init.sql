@@ -1,10 +1,31 @@
+CREATE TYPE gender as ENUM ('MALE', 'FEMALE');
+CREATE TYPE employment_nature as ENUM('CONTRACT', 'PERMANENT');
+CREATE TYPE employee_status_code  as ENUM('ACTIVE', 'INACTIVE');
+CREATE TYPE payroll_status_code as ENUM('DRAFT', 'APPROVED', 'PAID');
+CREATE TYPE performance_appraisals_status_code as ENUM('DRAFT', 'SUBMITTED', 'APPROVED');
+CREATE TYPE time_management_status_code as ENUM('COMPLIANT','NON-COMPLIANT', 'OVERTIME');
+CREATE TYPE acting_appointments_status_code as ENUM ('ACTIVE ', 'COMPLETED');
+CREATE TYPE promotions_approval_status as ENUM('PENDING' , 'APPROVED', 'REJECTED');
+CREATE TYPE trainings_status_code as ENUM('REQUESTED', 'APPROVED', 'COMPLETED', 'REJECTED');
+CREATE TYPE gender_restriction AS ENUM ('MALE ONLY', 'FEMALE ONLY', 'BOTH');
+CREATE TYPE leave_status_code as ENUM ('APPLIED', 'APPROVED', 'REJECTED', 'CANCELLED');
+CREATE TYPE repayment_period AS ENUM ('DAYS', 'WEEKS', 'MONTHS', 'YEARS');
+CREATE TYPE loans_status_code AS ENUM ('APPLIED', 'APPROVED', 'DISBURSED', 'COMPLETED', 'REJECTED');
+CREATE TYPE guarantors_status_code AS ENUM ('ACTIVE', 'CANCELLED');
+CREATE TYPE payment_status AS ENUM('PAID','PENDING', 'PARTIAL', 'OVERDUE');
+CREATE TYPE offense_category AS ENUM ('CONDUCT', 'PERFORMANCE', 'ATTENDANCE', 'FINANCIAL');
+CREATE TYPE case_status AS ENUM('PENDING', 'RESOLVED');
+CREATE TYPE clearance_status AS ENUM('PENDING', 'CLEARED');
+CREATE TYPE dues_payment_status AS ENUM('PENDING', 'PAID');
+CREATE TYPE medical_claims_status AS ENUM ('SUBMITTED', 'PROCESSING', 'APPROVED', 'REJECTED');
+CREATE TYPE payment_method AS ENUM ('CASH', 'MOBILE-MONEY', 'VISA');
 
 -- Employee Table
 CREATE TABLE employees (
     employee_id BIGSERIAL PRIMARY KEY,
     full_name VARCHAR(100) NOT NULL,
     national_id VARCHAR(20) NOT NULL,
-    gender VARCHAR(10),
+    gender gender NOT NULL,
     photo_path VARCHAR(255),
     date_of_birth DATE,
     date_of_employment DATE NOT NULL,
@@ -12,14 +33,14 @@ CREATE TABLE employees (
     physical_address VARCHAR(255),
     job_title VARCHAR(100),
     job_grade VARCHAR(20),
-    employment_nature VARCHAR(20),  -- Contract/Permanent
+    employment_nature employment_nature,  -- Contract/Permanent // ENUM
     department_id INT,  -- FK to departments
     qualifications TEXT,
     nhif_details VARCHAR(50),
     nssf_details VARCHAR(50),
     pin_number VARCHAR(20),
     custom_fields JSONB,
-    status_code INT DEFAULT 1,  -- 1=Active, 0=Inactive,
+    employee_status_code employee_status_code,  -- 1=Active, 0=Inactive,// ENUM
     created_by INT,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_by INT,
@@ -30,7 +51,7 @@ CREATE TABLE employees (
 CREATE INDEX idx_employee_department ON employees(department_id);
 CREATE INDEX idx_employee_job_grade ON employees(job_grade);
 CREATE INDEX idx_employee_national_id ON employees(national_id);
-CREATE INDEX idx_employee_status ON employees(status_code);
+CREATE INDEX idx_employee_status_code ON employees(employee_status_code);
 CREATE INDEX idx_employee_employment_nature ON employees(employment_nature);
 
 -- Next of Kin Table
@@ -79,7 +100,7 @@ CREATE TABLE payroll (
     total_allowances DECIMAL(12,2) DEFAULT 0.00,
     total_deductions DECIMAL(12,2) DEFAULT 0.00,
     net_pay DECIMAL(12,2) NOT NULL,
-    status_code INT DEFAULT 0,  -- 0=Draft, 1=Approved, 2=Paid
+    payroll_status_code payroll_status_code,  -- 0=Draft, 1=Approved, 2=Paid // Enumerated to strings
     custom_fields JSONB,
     created_by INT,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -89,7 +110,7 @@ CREATE TABLE payroll (
 
 CREATE INDEX idx_payroll_employee_id ON payroll(employee_id);
 CREATE INDEX idx_payroll_period ON payroll(payroll_period);
-CREATE INDEX idx_payroll_status ON payroll(status_code);
+CREATE INDEX idx_payroll_status_code ON payroll(payroll_status_code);
 
 -- Allowances Table
 CREATE TABLE allowances (
@@ -137,7 +158,7 @@ CREATE TABLE performance_appraisals (
     department_id INT , --FK to department.department_id
     comments TEXT,
     recommendations TEXT,
-    status_code INT DEFAULT 0,  -- 0=Draft, 1=Submitted, 2=Approved
+    performance_appraisals_status_code performance_appraisals_status_code,  -- 0=Draft, 1=Submitted, 2=Approved
     created_by INT,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_by INT,
@@ -146,7 +167,7 @@ CREATE TABLE performance_appraisals (
 
 CREATE INDEX idx_appraisal_employee_id ON performance_appraisals(employee_id);
 CREATE INDEX idx_appraisal_date ON performance_appraisals(appraisal_date);
-CREATE INDEX idx_appraisal_status ON performance_appraisals(status_code);
+CREATE INDEX idx_appraisal_status ON performance_appraisals(performance_appraisals_status_code);
 
 -- Time Management Table
 CREATE TABLE time_management (
@@ -157,7 +178,7 @@ CREATE TABLE time_management (
     entry_time TIME,
     leave_time TIME,
     overtime_hours DECIMAL(5,2) DEFAULT 0.00,
-    status_code INT DEFAULT 1,  -- 1=Valid, 0=Invalid
+    time_management_status_code  time_management_status_code,  -- 1=Valid, 0=Invalid //ENUM
     document_path VARCHAR(255),
     custom_fields JSONB,
     created_by INT,
@@ -181,7 +202,7 @@ CREATE TABLE acting_appointments (
     acting_allowance DECIMAL(12,2),
     document_path VARCHAR(255), -- For scanned documents
     custom_fields JSONB, -- For customizable fields
-    status_code INT DEFAULT 1,  -- 1=Active, 0=Completed
+    acting_appointments_status_code acting_appointments_status_code, -- 1=Active, 0=Completed //ENUM
     created_by INT,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_by INT,
@@ -191,7 +212,7 @@ CREATE TABLE acting_appointments (
 CREATE INDEX idx_acting_employee_id ON acting_appointments(employee_id);
 CREATE INDEX idx_acting_department ON acting_appointments(acting_department);
 CREATE INDEX idx_acting_dates ON acting_appointments(start_date, end_date);
-CREATE INDEX idx_acting_status ON acting_appointments(status_code);
+CREATE INDEX idx_acting_status ON acting_appointments(acting_appointments_status_code);
 
 -- Promotion Table
 CREATE TABLE promotions (
@@ -205,7 +226,7 @@ CREATE TABLE promotions (
     new_salary DECIMAL(12,2) NOT NULL,
     promotion_date DATE NOT NULL,
     reason TEXT,
-    approval_status VARCHAR(20) DEFAULT 'PENDING',  -- Simple status tracking
+    promotions_approval_status promotions_approval_status ,  -- Simple status tracking  //ENUM
     document_path VARCHAR(255), -- For scanned documents
     custom_fields JSONB, -- For customizable fields
     created_by INT,
@@ -226,7 +247,7 @@ CREATE TABLE position_requirements (
 
 CREATE INDEX idx_promotion_employee_id ON promotions(employee_id);
 CREATE INDEX idx_promotion_date ON promotions(promotion_date);
-CREATE INDEX idx_promotion_status ON promotions(approval_status);
+CREATE INDEX idx_promotion_status ON promotions(promotions_approval_status);
 CREATE INDEX idx_position_req ON position_requirements(position_code);
 
 -- Training Table
@@ -238,7 +259,7 @@ CREATE TABLE trainings (
     start_date DATE NOT NULL,
     end_date DATE,
     training_cost DECIMAL(12,2),
-    status_code INT DEFAULT 0,  -- 0=Requested, 1=Approved, 2=Completed, 3=Rejected
+    trainings_status_code trainings_status_code,  -- 0=Requested, 1=Approved, 2=Completed, 3=Rejected //ENUM
     document_path VARCHAR(255), -- For scanned documents
     custom_fields JSONB, -- For customizable fields
     created_by INT,
@@ -248,7 +269,7 @@ CREATE TABLE trainings (
 );
 
 CREATE INDEX idx_training_employee_id ON trainings(employee_id);
-CREATE INDEX idx_training_status ON trainings(status_code);
+CREATE INDEX idx_training_status_code ON trainings(trainings_status_code);
 CREATE INDEX idx_training_dates ON trainings(start_date, end_date);
 
 -- Leave Types Table
@@ -256,7 +277,7 @@ CREATE TABLE leave_types (
     leave_type_id SERIAL PRIMARY KEY,
     leave_name VARCHAR(50) NOT NULL,
     leave_description TEXT,
-    gender_restriction VARCHAR(10),  -- Male, Female, Both
+    gender_restriction gender_restriction,  -- Male, Female, Both //ENUM
     max_days INT NOT NULL,
     accrual_rate DECIMAL(5,2),-- e.g., 1.75 per month
     created_by INT,
@@ -280,7 +301,7 @@ CREATE TABLE leave_management (
     custom_fields JSONB, -- For customizable fields
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
-    status_code INT DEFAULT 0,  -- 0=Applied, 1=Approved, 2=Rejected, 3=Cancelled
+    leave_status_code leave_status_code,  -- 0=Applied, 1=Approved, 2=Rejected, 3=Cancelled //ENUM
     created_by INT,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_by INT,
@@ -298,7 +319,7 @@ CREATE TABLE leave_balances (
 CREATE INDEX idx_leave_employee_id ON leave_management(employee_id);
 CREATE INDEX idx_leave_type_id ON leave_management(leave_type_id);
 CREATE INDEX idx_leave_dates ON leave_management(start_date, end_date);
-CREATE INDEX idx_leave_status ON leave_management(status_code);
+CREATE INDEX idx_leave_status ON leave_management(leave_status_code);
 
 -- Staff Loans Table
 CREATE TABLE staff_loans (
@@ -308,12 +329,13 @@ CREATE TABLE staff_loans (
     loan_type VARCHAR(50) NOT NULL,
     loan_amount DECIMAL(12,2) NOT NULL,
     repayment_amount DECIMAL(12,2) NOT NULL,
-    repayment_period INT NOT NULL,  -- in months
+    repayment_period repayment_period,  -- in months
+--    CREATE TYPE repayment_unit AS ENUM ('DAYS', 'WEEKS', 'MONTHS', 'YEARS');
     interest_rate DECIMAL(5,2),
     loan_balance DECIMAL(12,2),
     interest_accrued DECIMAL(12,2),
     disbursement_date DATE,
-    status_code INT DEFAULT 0,  -- 0=Applied, 1=Approved, 2=Disbursed, 3=Completed, 4=Rejected
+    loans_status_code loans_status_code,  -- 0=Applied, 1=Approved, 2=Disbursed, 3=Completed, 4=Rejected //ENUM
     created_by INT,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_by INT,
@@ -322,7 +344,7 @@ CREATE TABLE staff_loans (
 
 CREATE INDEX idx_loan_employee_id ON staff_loans(employee_id);
 CREATE INDEX idx_loan_type ON staff_loans(loan_type);
-CREATE INDEX idx_loan_status ON staff_loans(status_code);
+CREATE INDEX idx_loan_status ON staff_loans(loans_status_code);
 
 -- Loan Guarantors Table
 CREATE TABLE loan_guarantors (
@@ -330,7 +352,7 @@ CREATE TABLE loan_guarantors (
     loan_id INT NOT NULL,       -- FK to staff_loans.loan_id
     employee_id INT NOT NULL,   -- FK to employees.employee_id
     guarantee_amount DECIMAL(12,2) NOT NULL,
-    status_code INT DEFAULT 1,  -- 1=Active, 0=Released
+    guarantors_status_code guarantors_status_code,  -- 1=Active, 0=Released //ENUM
     created_by INT,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_by INT,
@@ -346,9 +368,9 @@ CREATE TABLE loan_repayments (
     employee_id INT NOT NULL,
     payment_date DATE NOT NULL,
     amount_paid DECIMAL(12,2) NOT NULL,
-    payment_method VARCHAR(50),
+    payment_method payment_method, --ENUM field
     receipt_number VARCHAR (50),
-    payment_status VARCHAR(20) DEFAULT 'Pending', -- Paid, Partial, Overdue
+    payment_status payment_status , -- Paid, Partial, Overdue //ENUM
     created_by INT,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_by INT,
@@ -365,9 +387,9 @@ CREATE TABLE disciplinary_cases (
     designation VARCHAR(100),
     offense_date DATE NOT NULL,
     offense_description TEXT NOT NULL,
-    offense_category VARCHAR(50) NOT NULL,
+    offense_category offense_category, --//ENUM
     board_decision TEXT,
-    case_status INT DEFAULT 0,  -- 0=Pending, 1=Resolved
+    case_status case_status,  -- 0=Pending, 1=Resolved // ENUM
     document_path VARCHAR(255), -- For scanned documents
     custom_fields JSONB, -- For customizable fields
     created_by INT,
@@ -385,9 +407,9 @@ CREATE TABLE exit_process (
     exit_id SERIAL PRIMARY KEY,
     employee_id INT NOT NULL,  -- FK to employees.employee_id
     exit_date DATE NOT NULL,
-    exit_type VARCHAR(50) NOT NULL,
+    exit_type VARCHAR(50) NOT NULL, --ENUM
     exit_reason TEXT,
-    clearance_status INT DEFAULT 0,  -- 0=Pending, 1=Cleared
+    clearance_status clearance_status,  -- 0=Pending, 1=Cleared //ENUM
     document_path VARCHAR(255), -- For scanned documents
     custom_fields JSONB, -- For customizable fields
     comments TEXT,
@@ -408,7 +430,7 @@ CREATE TABLE retirement (
     employee_id INT NOT NULL,  -- FK to employees.employee_id
     retirement_date DATE NOT NULL,
     years_of_service INT,
-    dues_payment_status INT DEFAULT 0,  -- 0=Pending, 1=Paid
+    dues_payment_status dues_payment_status,  -- 0=Pending, 1=Paid //ENUM
     payment_details TEXT,
     document_path VARCHAR(255), -- For scanned documents
     custom_fields JSONB, -- For customizable fields
@@ -429,7 +451,7 @@ CREATE TABLE death_in_service (
     next_of_kin_id INT NOT NULL, -- FK to next_of_kin.next_of_kin_id (if nominee/nextofkin)
     death_date DATE NOT NULL,
     description TEXT,
-    payment_status INT DEFAULT 0,  -- 0=Pending, 1=Paid
+    payment_status payment_status,  -- 0=Pending, 1=Paid //ENUM
     document_path VARCHAR(255),
     custom_fields JSONB,
     created_by INT,
@@ -446,14 +468,14 @@ CREATE INDEX idx_death_payment ON death_in_service(payment_status);
 CREATE TABLE medical_claims (
     claim_id SERIAL PRIMARY KEY,
     employee_id INT NOT NULL,    -- FK to employees.employee_id
-    claimant_type VARCHAR(20) NOT NULL,  -- Staff or Beneficiary
+    claimant_type VARCHAR(20) NOT NULL,  -- Staff or Beneficiary //ENUM
     beneficiary_id INT,          -- FK to next_of_kin.next_of_kin_id (if beneficiary)
     institution VARCHAR(255) NOT NULL,
     claim_date DATE NOT NULL,
     claim_amount DECIMAL(12,2) NOT NULL,
     annual_limit DECIMAL(12,2) NOT NULL,
     claim_description TEXT,
-    status_code INT DEFAULT 0,  -- 0=Submitted, 1=Processing, 2=Approved, 3=Rejected
+    medical_claims_status medical_claims_status,  -- 0=Submitted, 1=Processing, 2=Approved, 3=Rejected //ENUM
     created_by INT,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_by INT,
@@ -463,5 +485,6 @@ CREATE TABLE medical_claims (
 CREATE INDEX idx_claim_employee_id ON medical_claims(employee_id);
 CREATE INDEX idx_claim_beneficiary_id ON medical_claims(beneficiary_id);
 CREATE INDEX idx_claim_date ON medical_claims(claim_date);
-CREATE INDEX idx_claim_status ON medical_claims(status_code);
+CREATE INDEX idx_claim_status ON medical_claims(medical_claims_status);
 CREATE INDEX idx_claim_claimant_type ON medical_claims(claimant_type);
+
