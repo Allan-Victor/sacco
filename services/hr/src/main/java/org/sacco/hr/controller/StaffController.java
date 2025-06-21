@@ -32,8 +32,8 @@ public class StaffController {
         return ResponseEntity.ok(staffService.fetchStaffPositionList(jobTitleId));
     }
 
-    @GetMapping
-    public ResponseEntity<List<StaffNextOfKinDTO>> getNextOfKinByStaffId(Integer staffId){
+    @GetMapping("/{staffId}")
+    public ResponseEntity<List<StaffNextOfKinDTO>> getNextOfKinByStaffId(@PathVariable("staffId") Integer staffId){
         return ResponseEntity.ok(staffService.fetchStaffNextOfKin(staffId));
     }
 }

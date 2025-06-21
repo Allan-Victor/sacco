@@ -2,10 +2,13 @@ package org.sacco.hr.dto;
 
 import org.sacco.hr.model.NextOfKin;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.stereotype.Component;
+
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+@Component
 public class NextOfKinMapper implements RowMapper<NextOfKin> {
     @Override
     public NextOfKin mapRow(ResultSet rs, int rowNum) throws SQLException {
@@ -18,6 +21,7 @@ public class NextOfKinMapper implements RowMapper<NextOfKin> {
                    rs.getString("kinNin"),
                    rs.getString("physicalAddress")
            );
+
 
     }
 }
